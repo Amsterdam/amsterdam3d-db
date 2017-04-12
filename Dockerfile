@@ -9,17 +9,34 @@ RUN apt-get update \
 		git \
 		cmake \
 		build-essential \
+		subversion \
+		autoconf \
+		libtool \
  	&& apt-get clean \
 	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# build GEOS
+WORKDIR /temp
+RUN mkdir geos
+
+WORKDIR /temp/geos
+RUN svn checkout -q https://svn.osgeo.org/geos/tags/3.6.1/
+
+WORKDIR /temp/geos/3.6.1
+RUN ./autogen.sh
+
+WORKDIR /temp/geos/3.6.1
+RUN ./configure
+
+WORKDIR /temp/geos/3.6.1
+RUN make -j 4
+
+WORKDIR /temp/geos/3.6.1
+RUN make install
+
+RUN rm -rf /temp/geos
 
 # Install recent GDAL
-RUN apt-get update \
-	&& apt-get remove -y \
-		libgdal1h \
-		libgdal-dev \
- 	&& apt-get clean \
-	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
 WORKDIR /temp
 RUN git clone https://github.com/OSGeo/gdal.git
 
@@ -44,7 +61,6 @@ RUN apt-get update \
 		libxml2-dev \
 		libjson-c-dev \
 		libcgal-dev \
-		liblas-dev \
  	&& apt-get clean \
 	&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -82,7 +98,7 @@ RUN make install
 RUN rm -rf /temp/postgis-2.3.2
 RUN rm /temp/postgis-2.3.2.tar.gz
 
-# build Postgis extensions
+# build LAZPERF extensions
 WORKDIR /temp
 RUN git clone https://github.com/hobu/laz-perf.git
 
